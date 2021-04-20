@@ -20,9 +20,9 @@ const App = () => {
   }, []);
   console.log("render", persons.length, "persons");
 
-  const filteredPersons = persons.filter((person) =>
-    person.name.toUpperCase().includes(filterName.slice().trim().toUpperCase())
-  );
+  // const filteredPersons = persons.filter((person) =>
+  //   person.name.toUpperCase().includes(filterName.slice().trim().toUpperCase())
+  // );
 
   const addPerson = (event) => {
     event.preventDefault();
