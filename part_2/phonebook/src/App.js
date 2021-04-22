@@ -2,14 +2,27 @@ import React, { useState, useEffect } from "react";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
+import Notification from "./components/Notification";
 import personService from "./services/persons";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
+
+  // for handling input of name field
   const [newName, setNewName] = useState("");
+
+  // for handling input of phone field
   const [newNumber, setNewNumber] = useState("");
+
+  // for handling input of find field
   const [filterName, setFilter] = useState("");
 
+  // for sending messages after success or failure
+  // after create, update or delete
+  const [displayMessage, setMessage] = useState(null);
+  const [isError, setError] = useState(false);
+
+  // to fetch initial persons array from database
   useEffect(() => {
     console.log("effect");
     personService.getAll().then((initialPersons) => {
@@ -21,6 +34,42 @@ const App = () => {
     person.name.toUpperCase().includes(filterName.slice().trim().toUpperCase())
   );
 
+  // for updating phone number if person already exists
+  const updatePerson = (person, newPersonObj) => {
+    personService
+      .update(person.id, newPersonObj)
+      .then((returnedPerson) => {
+        console.log("updated", returnedPerson);
+        const newPersons = persons.map((p) =>
+          p.id !== person.id ? p : returnedPerson
+        );
+        setPersons(newPersons);
+        setNewName("");
+        setNewNumber("");
+        setError(false);
+        setMessage(`Updated Phone Number for ${returnedPerson.name}`);
+        setTimeout(() => {
+          setMessage(null);
+        }, 5000);
+      })
+      .catch((error) => {
+        console.log("error :>> ", error);
+        const newPersons = persons.filter((p) => p.id !== person.id);
+        setPersons(newPersons);
+        setNewName("");
+        setNewNumber("");
+        setError(true);
+        setMessage(
+          `Information of ${person.name} has already been removed from server`
+        );
+        setTimeout(() => {
+          setMessage(null);
+        }, 5000);
+      });
+  };
+
+  // for adding new persons to the database
+  // called when form is submitted
   const addPerson = (event) => {
     event.preventDefault();
 
@@ -29,23 +78,17 @@ const App = () => {
       number: newNumber,
     };
 
+    // check whether person already exists
     const person = persons.find((p) => p.name === newName);
 
+    // if person already exists, ask user for updating the phone number
     if (person) {
       const confirm = window.confirm(
         `${newName} is already added to phonebook, replace the old number with a new one?`
       );
 
       if (confirm) {
-        personService.update(person.id, newPersonObj).then((returnedPerson) => {
-          console.log("updated", returnedPerson);
-          const newPersons = persons.map((p) =>
-            p.id !== person.id ? p : returnedPerson
-          );
-          setPersons(newPersons);
-          setNewName("");
-          setNewNumber("");
-        });
+        updatePerson(person, newPersonObj);
       }
     } else {
       personService.create(newPersonObj).then((returnedPerson) => {
@@ -53,11 +96,18 @@ const App = () => {
         setPersons(persons.concat(returnedPerson));
         setNewName("");
         setNewNumber("");
+        setError(false);
+        setMessage(`Added ${returnedPerson.name}`);
+        setTimeout(() => {
+          setMessage(null);
+        }, 5000);
       });
     }
   };
 
-  const onDelete = ({ id, name }) => {
+  // for deleting persons from the database
+  // called when delete button is clicked
+  const handleDeletePerson = ({ id, name }) => {
     const confirm = window.confirm(`Delete ${name} ?`);
 
     console.log("Delete", id, name);
@@ -67,6 +117,10 @@ const App = () => {
       personService.remove(id).then((deletedPerson) => {
         const newPersons = persons.filter((p) => p.id !== id);
         setPersons(newPersons);
+        setMessage(`Deleted ${name} from Phonebook`);
+        setTimeout(() => {
+          setMessage(null);
+        }, 5000);
       });
     }
   };
@@ -85,6 +139,7 @@ const App = () => {
 
   return (
     <div>
+      <Notification message={displayMessage} error={isError} />
       <h2>Phonebook</h2>
       <Filter
         text="filter name with "
@@ -102,7 +157,7 @@ const App = () => {
       />
 
       <h3>Numbers</h3>
-      <Persons persons={filteredPersons} onDelete={onDelete} />
+      <Persons persons={filteredPersons} onDelete={handleDeletePerson} />
     </div>
   );
 };
