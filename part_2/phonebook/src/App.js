@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from "react";
-import Filter from "./components/Filter";
-import PersonForm from "./components/PersonForm";
-import Persons from "./components/Persons";
-import Notification from "./components/Notification";
-import personService from "./services/persons";
+import React, { useState, useEffect } from 'react';
+import Filter from './components/Filter';
+import PersonForm from './components/PersonForm';
+import Persons from './components/Persons';
+import Notification from './components/Notification';
+import personService from './services/persons';
 
 const App = () => {
   const [persons, setPersons] = useState([]);
 
   // for handling input of name field
-  const [newName, setNewName] = useState("");
+  const [newName, setNewName] = useState('');
 
   // for handling input of phone field
-  const [newNumber, setNewNumber] = useState("");
+  const [newNumber, setNewNumber] = useState('');
 
   // for handling input of find field
-  const [filterName, setFilter] = useState("");
+  const [filterName, setFilter] = useState('');
 
   // for sending messages after success or failure
   // after create, update or delete
@@ -24,7 +24,7 @@ const App = () => {
 
   // to fetch initial persons array from database
   useEffect(() => {
-    console.log("effect");
+    console.log('effect');
     personService.getAll().then((initialPersons) => {
       setPersons(initialPersons);
     });
@@ -39,13 +39,13 @@ const App = () => {
     personService
       .update(person.id, newPersonObj)
       .then((returnedPerson) => {
-        console.log("updated", returnedPerson);
+        console.log('updated', returnedPerson);
         const newPersons = persons.map((p) =>
           p.id !== person.id ? p : returnedPerson
         );
         setPersons(newPersons);
-        setNewName("");
-        setNewNumber("");
+        setNewName('');
+        setNewNumber('');
         setError(false);
         setMessage(`Updated Phone Number for ${returnedPerson.name}`);
         setTimeout(() => {
@@ -53,11 +53,11 @@ const App = () => {
         }, 5000);
       })
       .catch((error) => {
-        console.log("error :>> ", error);
+        console.log('error :>> ', error);
         const newPersons = persons.filter((p) => p.id !== person.id);
         setPersons(newPersons);
-        setNewName("");
-        setNewNumber("");
+        setNewName('');
+        setNewNumber('');
         setError(true);
         setMessage(
           `Information of ${person.name} has already been removed from server`
@@ -91,17 +91,32 @@ const App = () => {
         updatePerson(person, newPersonObj);
       }
     } else {
-      personService.create(newPersonObj).then((returnedPerson) => {
-        console.log(returnedPerson);
-        setPersons(persons.concat(returnedPerson));
-        setNewName("");
-        setNewNumber("");
-        setError(false);
-        setMessage(`Added ${returnedPerson.name}`);
-        setTimeout(() => {
-          setMessage(null);
-        }, 5000);
-      });
+      personService
+        .create(newPersonObj)
+        .then((createdPerson) => {
+          console.log(createdPerson);
+
+          setPersons(persons.concat(createdPerson));
+          setNewName('');
+          setNewNumber('');
+
+          setError(false);
+          setMessage(`Added ${createdPerson.name}`);
+
+          setTimeout(() => {
+            setMessage(null);
+          }, 5000);
+        })
+        .catch((error) => {
+          console.log('error :>> ', error.response);
+
+          setError(true);
+          setMessage(error.response.data.error);
+
+          setTimeout(() => {
+            setMessage(null);
+          }, 5000);
+        });
     }
   };
 
@@ -110,8 +125,8 @@ const App = () => {
   const handleDeletePerson = ({ id, name }) => {
     const confirm = window.confirm(`Delete ${name} ?`);
 
-    console.log("Delete", id, name);
-    console.log("confirm :>> ", confirm);
+    console.log('Delete', id, name);
+    console.log('confirm :>> ', confirm);
 
     if (confirm) {
       personService.remove(id).then((deletedPerson) => {
