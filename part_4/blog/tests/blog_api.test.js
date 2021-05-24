@@ -13,7 +13,7 @@ beforeEach(async () => {
   const blogObjects = helper.initialBlogs.map((blog) => new Blog(blog));
   const promiseArray = blogObjects.map((blog) => blog.save());
 
-  // wait for all notes to be saved
+  // wait for all blogs to be saved
   await Promise.all(promiseArray);
 });
 
@@ -82,6 +82,51 @@ describe('New Blog Post', () => {
     };
 
     await api.post('/api/blogs').send(newBlog).expect(400);
+  });
+});
+
+describe('deletion of a blog', () => {
+  test('succeeds with status code 204 when id is valid', async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToDelete = blogsAtStart[0];
+
+    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+
+    const blogsAtEnd = await helper.blogsInDb();
+
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1);
+
+    const titles = blogsAtEnd.map((blog) => blog.title);
+
+    expect(titles).not.toContain(blogToDelete.title);
+  });
+});
+
+describe('updating a blog likes', () => {
+  test('succeeds with status code 200 when id is valid', async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToUpdate = blogsAtStart[0];
+    blogToUpdate.likes += 10;
+
+    const response = await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .send(blogToUpdate)
+      .expect(200);
+
+    expect(response.body.likes).toBe(blogToUpdate.likes);
+  });
+
+  test('fails with statuscode 404 if blog does not exist', async () => {
+    const validNonexistingId = await helper.nonExistingId();
+    const updatedBlog = {
+      title: 'Not a valid id',
+      url: 'does not exist',
+      author: 'John Doe',
+    };
+    await api
+      .put(`/api/blogs/${validNonexistingId}`)
+      .send(updatedBlog)
+      .expect(400);
   });
 });
 
