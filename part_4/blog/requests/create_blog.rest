@@ -1,9 +1,10 @@
 POST http://localhost:3001/api/blogs
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJvb3QiLCJpZCI6IjYwYWQyN2I2ODAyZDY4NTc1Y2E5ZDNhNiIsImlhdCI6MTYyMTk3MDA2NywiZXhwIjoxNjIxOTczNjY3fQ.k1nrv1NepIM2MqLca_UTQlFrmpHISDLyqu_v6xYXpII
 
 {
-    "title": "How to Create and Test a Node.js Blog API",
-    "author": "Ben Merchant",
-    "url": "https://medium.com/@benmerchant/how-to-create-and-test-a-node-js-blog-api-819170280abd",
-    "likes": 60
+    "title": "Testing Again",
+    "author": "Admin",
+    "url": "http://localhost:3001/api/blogs",
+    "likes": 1
 }
