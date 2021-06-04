@@ -89,18 +89,6 @@ const App = () => {
     }
   };
 
-  const loginForm = () => (
-    <Togglable buttonLabel="login">
-      <Login
-        username={username}
-        password={password}
-        setUsername={setUsername}
-        setPassword={setPassword}
-        handleLogin={handleLogin}
-      />
-    </Togglable>
-  );
-
   const handleLikes = async (id, blogObj) => {
     try {
       const updatedBlogObj = await blogService.update(id, blogObj);
@@ -127,6 +115,15 @@ const App = () => {
     }
   };
 
+  const loginForm = () => (
+    <Login
+      username={username}
+      password={password}
+      setUsername={setUsername}
+      setPassword={setPassword}
+      handleLogin={handleLogin}
+    />
+  );
   const blogForm = () => (
     <Togglable buttonLabel="create new blog" ref={blogRef}>
       <BlogForm createPost={handleNewPost} />
@@ -160,15 +157,17 @@ const App = () => {
         <h3>Create a Post</h3>
         {blogForm()}
       </div>
-      {blogs.map((blog) => (
-        <Blog
-          key={blog.id}
-          blog={blog}
-          user={user}
-          updateLikes={handleLikes}
-          deletePost={handleDeletePost}
-        />
-      ))}
+      <div className="blog-list">
+        {blogs.map((blog) => (
+          <Blog
+            key={blog.id}
+            blog={blog}
+            user={user}
+            updateLikes={handleLikes}
+            deletePost={handleDeletePost}
+          />
+        ))}
+      </div>
     </div>
   );
 };

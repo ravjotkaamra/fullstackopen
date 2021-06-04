@@ -42,7 +42,7 @@ const Blog = ({ blog, user, updateLikes, deletePost }) => {
       const btnStyle = { color: 'red', textAlign: 'center' };
       return (
         <div>
-          <button style={btnStyle} onClick={handleDelete}>
+          <button className="removeBtn" style={btnStyle} onClick={handleDelete}>
             remove
           </button>
         </div>
@@ -53,10 +53,12 @@ const Blog = ({ blog, user, updateLikes, deletePost }) => {
   };
 
   return (
-    <div style={blogStyle}>
+    <div className="blog-post" style={blogStyle}>
       <div className="blogHeader">
         {blog.title} {blog.author}
-        <button onClick={toggleVisibility}>{visible ? 'hide' : 'view'}</button>
+        <button onClick={toggleVisibility} className="blogBtn">
+          {visible ? 'hide' : 'view'}
+        </button>
       </div>
 
       <div style={showDetailsWhenVisible} className="blogDetails">
