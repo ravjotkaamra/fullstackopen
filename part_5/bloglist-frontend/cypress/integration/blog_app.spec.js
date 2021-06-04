@@ -101,7 +101,7 @@ describe('Blog app', function () {
         blogs.forEach((blog) => cy.createPost(blog));
       });
 
-      it.only('blogs are sorted by likes', function () {
+      it('blogs are sorted by likes', function () {
         cy.get('.blog-post').eq(0).should('contain', 'Testing 2.0');
         cy.get('.blog-post').eq(1).should('contain', 'Testing 3.0');
         cy.get('.blog-post').eq(2).should('contain', 'Testing 1.0');
