@@ -101,20 +101,11 @@ describe('Blog app', function () {
         blogs.forEach((blog) => cy.createPost(blog));
       });
 
-      // it.only('blogs are sorted by likes', function () {
-      //   cy.get('.blog-list').then(function ($blogs) {
-      //     console.log('$blogs :>> ', ($blogs));
-      //     console.log('$blogs :>> ', typeof($blogs));
-      //     console.log('$blogs[0] :>> ', typeof($blogs.eq(0)));
-      //     console.log('$blogs[0] :>> ', ($blogs.eq(0)));
-      //     expect($blogs.eq(0)).toContain('Testing 2.0');
-      //     expect($blogs.eq(1)).toContain('Testing 3.0');
-      //     expect($blogs.eq(2)).toContain('Testing 1.0');
-      //     // cy.wrap($blogs[0]).should('contain', 'Testing 2.0');
-      //     // cy.wrap($blogs[1]).should('contain', 'Testing 3.0');
-      //     // cy.wrap($blogs[2]).should('contain', 'Testing 1.0');
-      //   });
-      // });
+      it.only('blogs are sorted by likes', function () {
+        cy.get('.blog-post').eq(0).should('contain', 'Testing 2.0');
+        cy.get('.blog-post').eq(1).should('contain', 'Testing 3.0');
+        cy.get('.blog-post').eq(2).should('contain', 'Testing 1.0');
+      });
     });
   });
 });
