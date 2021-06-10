@@ -5,11 +5,12 @@ import {
   createNotification,
   removeNotification,
 } from '../reducers/notificationReducer';
+import anecdoteServices from '../services/anecdotes';
 
 const AnecdoteForm = (props) => {
   const dispatch = useDispatch();
 
-  const addAnecdote = (event) => {
+  const addAnecdote = async (event) => {
     event.preventDefault();
 
     // extract the content from the input field of the form
@@ -18,7 +19,8 @@ const AnecdoteForm = (props) => {
 
     // use the action creator from anecdoteReducer to generate an action
     // and dispatch it to update the state.anecdotes of the store
-    dispatch(createAnecdote(content));
+    const newAnecdote = await anecdoteServices.create(content);
+    dispatch(createAnecdote(newAnecdote));
 
     // use the action creator from notificationReducer to generate an action
     // and dispatch it to update the state.notificaiton of the store
