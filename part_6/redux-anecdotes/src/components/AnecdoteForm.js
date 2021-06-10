@@ -1,11 +1,7 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { createAnecdote } from '../reducers/anecdoteReducer';
-import {
-  createNotification,
-  removeNotification,
-} from '../reducers/notificationReducer';
-import anecdoteServices from '../services/anecdotes';
+import { setNotification } from '../reducers/notificationReducer';
 
 const AnecdoteForm = (props) => {
   const dispatch = useDispatch();
@@ -19,17 +15,12 @@ const AnecdoteForm = (props) => {
 
     // use the action creator from anecdoteReducer to generate an action
     // and dispatch it to update the state.anecdotes of the store
-    const newAnecdote = await anecdoteServices.create(content);
-    dispatch(createAnecdote(newAnecdote));
+    dispatch(createAnecdote(content));
 
     // use the action creator from notificationReducer to generate an action
-    // and dispatch it to update the state.notificaiton of the store
-    dispatch(createNotification(`Anecode created: '${content}'`));
-
+    // and dispatch it to update the state.notificaiton of the store and,
     // after five seconds remove the notification message
-    setTimeout(() => {
-      dispatch(removeNotification());
-    }, 5000);
+    dispatch(setNotification(`Anecode created: '${content}'`, 5));
   };
 
   return (

@@ -4,7 +4,7 @@ const reducer = (state = initialMessage, action) => {
   switch (action.type) {
     case 'SET_NOTIFICATION':
       return action.message;
-    case 'REMOVE_NOTIFICATION':
+    case 'CLEAR_NOTIFICATION':
       return initialMessage;
     default:
       return state;
@@ -13,16 +13,18 @@ const reducer = (state = initialMessage, action) => {
 
 // action creators for setting and removing
 // the notification message
-export const createNotification = (message) => {
-  return {
-    type: 'SET_NOTIFICATION',
-    message,
-  };
-};
+export const setNotification = (message, timeout) => {
+  return async (dispatch) => {
+    dispatch({
+      type: 'SET_NOTIFICATION',
+      message,
+    });
 
-export const removeNotification = () => {
-  return {
-    type: 'REMOVE_NOTIFICATION',
+    setTimeout(() => {
+      dispatch({
+        type: 'CLEAR_NOTIFICATION',
+      });
+    }, timeout * 1000);
   };
 };
 
