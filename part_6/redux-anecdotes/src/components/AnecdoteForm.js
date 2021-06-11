@@ -1,11 +1,9 @@
 import React from 'react';
-import { useDispatch } from 'react-redux';
+import { connect } from 'react-redux';
 import { createAnecdote } from '../reducers/anecdoteReducer';
 import { setNotification } from '../reducers/notificationReducer';
 
 const AnecdoteForm = (props) => {
-  const dispatch = useDispatch();
-
   const addAnecdote = async (event) => {
     event.preventDefault();
 
@@ -15,12 +13,12 @@ const AnecdoteForm = (props) => {
 
     // use the action creator from anecdoteReducer to generate an action
     // and dispatch it to update the state.anecdotes of the store
-    dispatch(createAnecdote(content));
+    props.createAnecdote(content);
 
     // use the action creator from notificationReducer to generate an action
     // and dispatch it to update the state.notificaiton of the store and,
     // after five seconds remove the notification message
-    dispatch(setNotification(`Anecode created: '${content}'`, 5));
+    props.setNotification(`Anecode created: '${content}'`, 5);
   };
 
   return (
@@ -33,4 +31,12 @@ const AnecdoteForm = (props) => {
   );
 };
 
-export default AnecdoteForm;
+const mapDispatchToProps = (dispatch) => {
+  return {
+    setNotification: (content) =>
+      dispatch(setNotification(`Anecode created: '${content}'`, 5)),
+    createAnecdote: (content) => dispatch(createAnecdote(content)),
+  };
+};
+
+export default connect(null, mapDispatchToProps)(AnecdoteForm);

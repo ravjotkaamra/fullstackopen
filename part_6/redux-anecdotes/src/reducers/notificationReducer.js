@@ -1,4 +1,5 @@
 const initialMessage = 'Welcome my friend!';
+let prevTimerId = null;
 
 const reducer = (state = initialMessage, action) => {
   switch (action.type) {
@@ -15,12 +16,16 @@ const reducer = (state = initialMessage, action) => {
 // the notification message
 export const setNotification = (message, timeout) => {
   return async (dispatch) => {
+    // before displaying a new notification on to the screen,
+    // first remove the timer set by the old notification
+    clearTimeout(prevTimerId);
+
     dispatch({
       type: 'SET_NOTIFICATION',
       message,
     });
 
-    setTimeout(() => {
+    prevTimerId = setTimeout(() => {
       dispatch({
         type: 'CLEAR_NOTIFICATION',
       });

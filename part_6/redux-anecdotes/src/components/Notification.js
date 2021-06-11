@@ -1,8 +1,7 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
+import { connect } from 'react-redux';
 
-const Notification = () => {
-  const notification = useSelector((state) => state.notification);
+const Notification = (props) => {
   const style = {
     border: 'solid',
     padding: 10,
@@ -10,10 +9,19 @@ const Notification = () => {
   };
   return (
     <>
-      <div style={style}>{notification} </div>
+      <div style={style}>{props.notification} </div>
       <br />
     </>
   );
 };
 
-export default Notification;
+// convert the regular react component to connected component
+// so that the state of the store can be directly accessed from props
+const mapStateToProps = (state) => {
+  return {
+    notification: state.notification,
+  };
+};
+const ConnectedNotification = connect(mapStateToProps)(Notification);
+
+export default ConnectedNotification;
