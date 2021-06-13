@@ -6,6 +6,9 @@ import Togglable from './components/Togglable';
 import Notification from './components/Notification';
 import blogService from './services/blogs';
 import loginService from './services/login';
+import { useDispatch } from 'react-redux';
+import { setNotification } from './reducers/notificationReducer';
+import { initializeBlogs } from './reducers/blogReducer';
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
@@ -13,9 +16,13 @@ const App = () => {
   const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
 
-  const [notify, setNotify] = useState(null);
-
   const blogRef = useRef();
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(initializeBlogs());
+  }, [dispatch]);
 
   useEffect(() => {
     blogService.getAll().then((blogs) => {
@@ -50,14 +57,23 @@ const App = () => {
       setUsername('');
       setPassword('');
 
-      setNotify({ message: `Welcome ${user.name}`, type: 'success' });
+      dispatch(
+        setNotification(
+          { message: `Welcome ${user.name}`, type: 'success' },
+          5000
+        )
+      );
     } catch (exception) {
       console.log('exception :>> ', exception);
-      setNotify({ message: 'Wrong username or password', type: 'error' });
-    } finally {
-      setTimeout(() => {
-        setNotify(null);
-      }, 5000);
+      dispatch(
+        setNotification(
+          {
+            message: 'Wrong username or password',
+            type: 'error',
+          },
+          5000
+        )
+      );
     }
   };
 
@@ -75,17 +91,26 @@ const App = () => {
 
       const newBlog = await blogService.create(blogObj);
       setBlogs(blogs.concat(newBlog));
-      setNotify({
-        message: `New Post ${newBlog.title} created`,
-        type: 'success',
-      });
+      dispatch(
+        setNotification(
+          {
+            message: `New Post ${newBlog.title} created`,
+            type: 'success',
+          },
+          5000
+        )
+      );
     } catch (exception) {
       console.log('exception :>> ', exception);
-      setNotify({ message: 'Wrong credentials', type: 'error' });
-    } finally {
-      setTimeout(() => {
-        setNotify(null);
-      }, 5000);
+      dispatch(
+        setNotification(
+          {
+            message: 'Wrong credentials or data missing',
+            type: 'error',
+          },
+          5000
+        )
+      );
     }
   };
 
@@ -135,7 +160,7 @@ const App = () => {
     return (
       <div>
         <h2>Log in to application</h2>
-        <Notification notify={notify} />
+        <Notification />
         {loginForm()}
       </div>
     );
@@ -145,8 +170,7 @@ const App = () => {
   return (
     <div>
       <h2>Blogs</h2>
-      <Notification notify={notify} />
-
+      <Notification />
       <div>
         <p>
           {user.name} logged in
