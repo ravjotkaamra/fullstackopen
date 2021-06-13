@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import { useDispatch, useSelector } from 'react-redux';
+import { likeBlog, removeBlog } from '../reducers/blogReducer';
 
-const Blog = ({ blog, user, updateLikes, deletePost }) => {
+const Blog = ({ blog }) => {
   const [visible, setVisible] = useState(false);
 
-  const toggleVisibility = () => {
-    setVisible(!visible);
-  };
+  const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
 
   const showDetailsWhenVisible = { display: visible ? '' : 'none' };
 
@@ -18,22 +18,13 @@ const Blog = ({ blog, user, updateLikes, deletePost }) => {
     marginBottom: 5,
   };
 
-  const incrementLikes = () => {
-    const blogObj = {
-      title: blog.title,
-      author: blog.author,
-      url: blog.url,
-      likes: blog.likes + 1,
-      user: blog.user.id,
-      id: blog.id,
-    };
-
-    updateLikes(blog.id, blogObj);
+  const toggleVisibility = () => {
+    setVisible(!visible);
   };
 
   const handleDelete = async () => {
     if (window.confirm(`Remove Blog ${blog.title} by ${blog.author}`)) {
-      await deletePost(blog.id);
+      dispatch(removeBlog(blog.id));
     }
   };
 
@@ -65,7 +56,7 @@ const Blog = ({ blog, user, updateLikes, deletePost }) => {
         <div>url {blog.url}</div>
         <div>
           likes {blog.likes}
-          <button onClick={incrementLikes} className="likeBtn">
+          <button onClick={() => dispatch(likeBlog(blog))} className="likeBtn">
             like
           </button>
         </div>
@@ -76,11 +67,18 @@ const Blog = ({ blog, user, updateLikes, deletePost }) => {
   );
 };
 
-Blog.propTypes = {
-  updateLikes: PropTypes.func.isRequired,
-  deletePost: PropTypes.func.isRequired,
-  user: PropTypes.object.isRequired,
-  blog: PropTypes.object.isRequired,
+const BlogList = () => {
+  const blogs = useSelector((state) =>
+    state.blogs.sort((blog_1, blog_2) => blog_2.likes - blog_1.likes)
+  );
+
+  return (
+    <div>
+      {blogs.map((blog) => (
+        <Blog key={blog.id} blog={blog} />
+      ))}
+    </div>
+  );
 };
 
-export default Blog;
+export default BlogList;

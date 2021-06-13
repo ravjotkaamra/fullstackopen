@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Blog from './components/Blog';
 import Login from './components/Login';
 import BlogForm from './components/BlogForm';
 import Togglable from './components/Togglable';
@@ -8,7 +7,8 @@ import blogService from './services/blogs';
 import loginService from './services/login';
 import { useDispatch } from 'react-redux';
 import { setNotification } from './reducers/notificationReducer';
-import { initializeBlogs } from './reducers/blogReducer';
+import { initializeBlogs, createBlog } from './reducers/blogReducer';
+import BlogList from './components/BlogList';
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
@@ -91,6 +91,9 @@ const App = () => {
 
       const newBlog = await blogService.create(blogObj);
       setBlogs(blogs.concat(newBlog));
+
+      dispatch(createBlog(blogObj));
+
       dispatch(
         setNotification(
           {
@@ -111,32 +114,6 @@ const App = () => {
           5000
         )
       );
-    }
-  };
-
-  const handleLikes = async (id, blogObj) => {
-    try {
-      const updatedBlogObj = await blogService.update(id, blogObj);
-
-      const newBlogs = blogs.map((blog) =>
-        blog.id !== updatedBlogObj.id
-          ? blog
-          : { ...blog, likes: updatedBlogObj.likes }
-      );
-
-      newBlogs.sort((blog_1, blog_2) => blog_2.likes - blog_1.likes);
-      setBlogs(newBlogs);
-    } catch (error) {
-      console.log('error like button :>> ', error);
-    }
-  };
-
-  const handleDeletePost = async (blogId) => {
-    try {
-      await blogService.remove(blogId);
-      setBlogs(blogs.filter((blog) => blog.id !== blogId));
-    } catch (error) {
-      console.log('error: deletion failed :>> ', error);
     }
   };
 
@@ -181,17 +158,7 @@ const App = () => {
         <h3>Create a Post</h3>
         {blogForm()}
       </div>
-      <div className="blog-list">
-        {blogs.map((blog) => (
-          <Blog
-            key={blog.id}
-            blog={blog}
-            user={user}
-            updateLikes={handleLikes}
-            deletePost={handleDeletePost}
-          />
-        ))}
-      </div>
+      <BlogList />
     </div>
   );
 };
