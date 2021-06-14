@@ -1,15 +1,20 @@
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import blogService from './services/blogs';
 
+import Blog from './components/Blog';
 import BlogForm from './components/BlogForm';
 import BlogList from './components/BlogList';
 import LoginForm from './components/LoginForm';
+import Navbar from './components/Navbar';
 import Notification from './components/Notification';
 import Togglable from './components/Togglable';
+import User from './components/User';
+import UserList from './components/UserList';
 
 import { initializeBlogs } from './actions/blogActions';
-import { logoutUser } from './actions/userActions';
+import { initializeUsers } from './actions/usersActions';
 
 const App = () => {
   const blogRef = useRef();
@@ -18,6 +23,7 @@ const App = () => {
 
   useEffect(() => {
     dispatch(initializeBlogs());
+    dispatch(initializeUsers());
   }, [dispatch]);
 
   // if the user had already logged-in, get the user details
@@ -30,14 +36,6 @@ const App = () => {
       blogService.setToken(user.token);
     }
   }, []);
-
-  const handleLogout = () => {
-    // required without reload
-    blogService.setToken(null);
-    // required after reload
-    window.localStorage.removeItem('loggedBlogappUser');
-    dispatch(logoutUser());
-  };
 
   // print login form if user is not logged in
   if (user === null) {
@@ -52,23 +50,37 @@ const App = () => {
 
   // print all the blogs if user is logged in
   return (
-    <div>
-      <h2>Blogs</h2>
-      <Notification />
+    <Router>
       <div>
-        <p>
-          {user.name} logged in
-          <button onClick={handleLogout}>logout</button>
-        </p>
+        <Navbar />
+        <h2>Blogs</h2>
+        <Notification />
+
+        <Switch>
+          <Route path="/users/:id">
+            <User />
+          </Route>
+          <Route path="/users">
+            <UserList />
+          </Route>
+          <Route path="/blogs/:id">
+            <Blog />
+          </Route>
+          <Route path="/blogs">
+            <BlogList />
+          </Route>
+          <Route path="/">
+            <div>
+              <h3>Create a Post</h3>
+              <Togglable buttonLabel="create new blog" ref={blogRef}>
+                <BlogForm blogRef={blogRef} />
+              </Togglable>
+            </div>
+            <BlogList />
+          </Route>
+        </Switch>
       </div>
-      <div>
-        <h3>Create a Post</h3>
-        <Togglable buttonLabel="create new blog" ref={blogRef}>
-          <BlogForm blogRef={blogRef} />
-        </Togglable>
-      </div>
-      <BlogList />
-    </div>
+    </Router>
   );
 };
 

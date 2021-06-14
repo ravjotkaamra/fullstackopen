@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useHistory, useParams } from 'react-router-dom';
 import { likeBlog, removeBlog } from '../actions/blogActions';
 
-const Blog = ({ blog }) => {
-  const [visible, setVisible] = useState(false);
-
-  const user = useSelector((state) => state.user);
+const Blog = () => {
   const dispatch = useDispatch();
+  const user = useSelector((state) => state.user);
 
-  const showDetailsWhenVisible = { display: visible ? '' : 'none' };
+  const id = useParams().id;
+  const blog = useSelector(({ blogs }) => blogs.find((b) => b.id === id));
+  const history = useHistory();
 
   const blogStyle = {
     paddingTop: 10,
@@ -18,18 +19,15 @@ const Blog = ({ blog }) => {
     marginBottom: 5,
   };
 
-  const toggleVisibility = () => {
-    setVisible(!visible);
-  };
-
   const handleDelete = async () => {
     if (window.confirm(`Remove Blog ${blog.title} by ${blog.author}`)) {
       dispatch(removeBlog(blog.id));
+      history.push('/');
     }
   };
 
   const removeButton = () => {
-    if (blog.user && user.username === blog.user.username) {
+    if (user.username === blog.user.username) {
       const btnStyle = { color: 'red', textAlign: 'center' };
       return (
         <div>
@@ -43,42 +41,26 @@ const Blog = ({ blog }) => {
     return null;
   };
 
+  if (!blog) {
+    return null;
+  }
+
   return (
     <div className="blog-post" style={blogStyle}>
-      <div className="blogHeader">
-        {blog.title} {blog.author}
-        <button onClick={toggleVisibility} className="blogBtn">
-          {visible ? 'hide' : 'view'}
-        </button>
-      </div>
-
-      <div style={showDetailsWhenVisible} className="blogDetails">
+      <div className="blogDetails">
+        <h3>{blog.title}</h3>
         <div>url {blog.url}</div>
         <div>
-          likes {blog.likes}
+          {blog.likes} likes
           <button onClick={() => dispatch(likeBlog(blog))} className="likeBtn">
             like
           </button>
         </div>
-        <div>{blog.user ? blog.user.name : null}</div>
+        <div>added by {blog.user.name}</div>
         {removeButton()}
       </div>
     </div>
   );
 };
 
-const BlogList = () => {
-  const blogs = useSelector((state) =>
-    state.blogs.sort((blog_1, blog_2) => blog_2.likes - blog_1.likes)
-  );
-
-  return (
-    <div>
-      {blogs.map((blog) => (
-        <Blog key={blog.id} blog={blog} />
-      ))}
-    </div>
-  );
-};
-
-export default BlogList;
+export default Blog;
