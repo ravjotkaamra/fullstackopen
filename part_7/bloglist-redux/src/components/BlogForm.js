@@ -1,23 +1,26 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
+import { createBlog } from '../actions/blogActions';
 
-const BlogForm = ({ createPost }) => {
+const BlogForm = ({ blogRef }) => {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [url, setUrl] = useState('');
 
-  const addBlog = (event) => {
+  const dispatch = useDispatch();
+
+  const handleSubmit = (event) => {
     event.preventDefault();
 
-    createPost({ title, author, url });
-
+    blogRef.current.toggleVisibility();
+    dispatch(createBlog({ title, author, url }));
     setTitle('');
     setAuthor('');
     setUrl('');
   };
 
   return (
-    <form onSubmit={addBlog}>
+    <form onSubmit={handleSubmit}>
       <div>
         title:
         <input
@@ -54,10 +57,6 @@ const BlogForm = ({ createPost }) => {
       </button>
     </form>
   );
-};
-
-BlogForm.propTypes = {
-  createPost: PropTypes.func.isRequired,
 };
 
 export default BlogForm;

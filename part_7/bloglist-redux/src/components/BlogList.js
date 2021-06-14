@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { likeBlog, removeBlog } from '../reducers/blogReducer';
+import { likeBlog, removeBlog } from '../actions/blogActions';
 
 const Blog = ({ blog }) => {
   const [visible, setVisible] = useState(false);
