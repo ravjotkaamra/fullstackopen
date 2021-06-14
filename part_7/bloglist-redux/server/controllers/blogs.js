@@ -74,4 +74,23 @@ blogsRouter.put('/:id', async (request, response) => {
   }
 });
 
+blogsRouter.get('/:id/comments', async (request, response) => {
+  const blog = await Blog.findById(request.params.id);
+  response.json(blog.comments);
+});
+
+blogsRouter.post('/:id/comments', async (request, response) => {
+  const body = request.body;
+  if (!body.comment) {
+    response.status(400).send({ error: 'Comment is missing' });
+  }
+
+  const blog = await Blog.findByIdAndUpdate(
+    request.params.id,
+    { ['$addToSet']: { comments: body.comment } },
+    { new: true }
+  );
+  response.json(blog);
+});
+
 module.exports = blogsRouter;
