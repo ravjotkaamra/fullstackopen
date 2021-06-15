@@ -12,6 +12,14 @@ const blogReducer = (state = [], action) => {
       const id = action.data.id;
       return state.map((blog) => (blog.id !== id ? blog : action.data));
     }
+    case 'ADD_COMMENT': {
+      const { id, comment } = action.data;
+      return state.map((blog) =>
+        blog.id !== id
+          ? blog
+          : { ...blog, comments: [...blog.comments, comment] }
+      );
+    }
     default:
       return state;
   }

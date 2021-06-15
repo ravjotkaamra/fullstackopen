@@ -1,7 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory, useParams } from 'react-router-dom';
-import { likeBlog, removeBlog } from '../actions/blogActions';
+import { likeBlog, removeBlog, addComment } from '../actions/blogActions';
+
+const CommentList = ({ blog }) => {
+  const [comment, setComment] = useState('');
+  const dispatch = useDispatch();
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    dispatch(addComment(blog.id, comment));
+    setComment('');
+  };
+
+  if (!blog.comments) {
+    return null;
+  }
+
+  return (
+    <div>
+      <h3>comments</h3>
+
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={comment}
+          name="Comment"
+          onChange={({ target }) => setComment(target.value)}
+        />
+        <button type="submit">add comment</button>
+      </form>
+
+      <ul>
+        {blog.comments.map((comment, idx) => (
+          <li key={idx}>{comment}</li>
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 const Blog = () => {
   const dispatch = useDispatch();
@@ -58,6 +95,7 @@ const Blog = () => {
         </div>
         <div>added by {blog.user.name}</div>
         {removeButton()}
+        <CommentList blog={blog} />
       </div>
     </div>
   );

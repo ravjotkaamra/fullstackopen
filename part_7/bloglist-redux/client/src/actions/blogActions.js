@@ -19,6 +19,12 @@ export const createBlog = (blog) => {
         type: 'NEW_BLOG',
         data: newBlog,
       });
+
+      dispatch({
+        type: 'PUSH_BLOG_USER',
+        data: newBlog,
+      });
+
       dispatch(
         setNotification(
           {
@@ -47,6 +53,7 @@ export const removeBlog = (id) => {
   return async (dispatch) => {
     await blogService.remove(id);
     dispatch({ type: 'REMOVE_BLOG', id });
+    dispatch({ type: 'REMOVE_BLOG_USER', id });
   };
 };
 
@@ -65,5 +72,15 @@ export const likeBlog = (blog) => {
     } catch (error) {
       console.log('error in liking >> ', error);
     }
+  };
+};
+
+export const addComment = (id, comment) => {
+  return async (dispatch) => {
+    await blogService.postComment(id, comment);
+    dispatch({
+      type: 'ADD_COMMENT',
+      data: { id, comment },
+    });
   };
 };
