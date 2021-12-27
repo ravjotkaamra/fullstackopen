@@ -2,6 +2,7 @@ const { ApolloServer, gql } = require("apollo-server");
 const {
   ApolloServerPluginLandingPageGraphQLPlayground,
 } = require("apollo-server-core/dist/plugin/landingPage/graphqlPlayground");
+const { v1: uuid } = require("uuid");
 
 let authors = [
   {
@@ -107,8 +108,17 @@ const typeDefs = gql`
   type Query {
     bookCount: Int!
     authorCount: Int!
-    allBooks(author: String): [Book!]
+    allBooks(author: String, genre: String): [Book!]
     allAuthors: [Author!]
+  }
+
+  type Mutation {
+    addBook(
+      title: String!
+      author: String!
+      published: Int!
+      genres: [String!]!
+    ): Book!
   }
 `;
 
@@ -119,11 +129,20 @@ const resolvers = {
     bookCount: () => books.length,
     authorCount: () => authors.length,
     allBooks: (root, args) => {
-      if (!args.author) {
-        return books;
-      }
+      const { author, genre } = args;
 
-      return books.filter((book) => book.author === args.author);
+      if (author && genre) {
+        return books.filter(
+          (book) => book.author === author && book.genres.includes(genre)
+        );
+      }
+      if (author) {
+        return books.filter((book) => book.author === author);
+      }
+      if (genre) {
+        return books.filter((book) => book.genres.includes(genre));
+      }
+      return books;
     },
     allAuthors: () => authors,
   },
@@ -134,6 +153,19 @@ const resolvers = {
         (total, book) => (book.author === root.name ? total + 1 : total),
         0
       );
+    },
+  },
+
+  Mutation: {
+    addBook: (root, args) => {
+      const book = { ...args, id: uuid() };
+      books = [...books, book];
+
+      if (!authors.find((author) => author.name === book.author)) {
+        authors = [...authors, { name: book.author, id: uuid() }];
+      }
+
+      return book;
     },
   },
 };
