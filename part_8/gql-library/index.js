@@ -1,90 +1,18 @@
-const { ApolloServer, gql } = require("apollo-server");
+require("dotenv").config();
+
+const {
+  ApolloServer,
+  UserInputError,
+  AuthenticationError,
+  gql,
+} = require("apollo-server");
 const {
   ApolloServerPluginLandingPageGraphQLPlayground,
 } = require("apollo-server-core/dist/plugin/landingPage/graphqlPlayground");
-const { v1: uuid } = require("uuid");
+const db = require("./db");
+const jwt = require("jsonwebtoken");
 
-let authors = [
-  {
-    name: "Robert Martin",
-    id: "afa51ab0-344d-11e9-a414-719c6709cf3e",
-    born: 1952,
-  },
-  {
-    name: "Martin Fowler",
-    id: "afa5b6f0-344d-11e9-a414-719c6709cf3e",
-    born: 1963,
-  },
-  {
-    name: "Fyodor Dostoevsky",
-    id: "afa5b6f1-344d-11e9-a414-719c6709cf3e",
-    born: 1821,
-  },
-  {
-    name: "Joshua Kerievsky", // birthyear not known
-    id: "afa5b6f2-344d-11e9-a414-719c6709cf3e",
-  },
-  {
-    name: "Sandi Metz", // birthyear not known
-    id: "afa5b6f3-344d-11e9-a414-719c6709cf3e",
-  },
-];
-
-/* It might make more sense to associate a book with its author by storing the author's id in the context of the book instead of the author's name
- * However, for simplicity, we will store the author's name in connection with the book
- */
-
-let books = [
-  {
-    title: "Clean Code",
-    published: 2008,
-    author: "Robert Martin",
-    id: "afa5b6f4-344d-11e9-a414-719c6709cf3e",
-    genres: ["refactoring"],
-  },
-  {
-    title: "Agile software development",
-    published: 2002,
-    author: "Robert Martin",
-    id: "afa5b6f5-344d-11e9-a414-719c6709cf3e",
-    genres: ["agile", "patterns", "design"],
-  },
-  {
-    title: "Refactoring, edition 2",
-    published: 2018,
-    author: "Martin Fowler",
-    id: "afa5de00-344d-11e9-a414-719c6709cf3e",
-    genres: ["refactoring"],
-  },
-  {
-    title: "Refactoring to patterns",
-    published: 2008,
-    author: "Joshua Kerievsky",
-    id: "afa5de01-344d-11e9-a414-719c6709cf3e",
-    genres: ["refactoring", "patterns"],
-  },
-  {
-    title: "Practical Object-Oriented Design, An Agile Primer Using Ruby",
-    published: 2012,
-    author: "Sandi Metz",
-    id: "afa5de02-344d-11e9-a414-719c6709cf3e",
-    genres: ["refactoring", "design"],
-  },
-  {
-    title: "Crime and punishment",
-    published: 1866,
-    author: "Fyodor Dostoevsky",
-    id: "afa5de03-344d-11e9-a414-719c6709cf3e",
-    genres: ["classic", "crime"],
-  },
-  {
-    title: "The Demon ",
-    published: 1872,
-    author: "Fyodor Dostoevsky",
-    id: "afa5de04-344d-11e9-a414-719c6709cf3e",
-    genres: ["classic", "revolution"],
-  },
-];
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -105,11 +33,22 @@ const typeDefs = gql`
     bookCount: Int!
   }
 
+  type User {
+    username: String!
+    favoriteGenre: String
+    id: ID!
+  }
+
+  type Token {
+    value: String!
+  }
+
   type Query {
+    me: User
     bookCount: Int!
     authorCount: Int!
-    allBooks(author: String, genre: String): [Book!]
-    allAuthors: [Author!]
+    allBooks(author: String, genre: String): [Book!]!
+    allAuthors: [Author!]!
   }
 
   type Mutation {
@@ -120,6 +59,8 @@ const typeDefs = gql`
       genres: [String!]!
     ): Book!
     editAuthor(name: String!, setBornTo: Int!): Author
+    createUser(username: String!): User
+    login(username: String!, password: String!): Token
   }
 `;
 
@@ -127,11 +68,42 @@ const typeDefs = gql`
 // schema. This resolver retrieves books from the "books" array above.
 const resolvers = {
   Query: {
-    bookCount: () => books.length,
-    authorCount: () => authors.length,
-    allBooks: (root, args) => {
-      const { author, genre } = args;
+    me: (root, args, context) => {
+      return context.currentUser;
+    },
+    bookCount: async () => {
+      const { rows: book } = await db.query("SELECT COUNT(*) FROM book");
+      console.log(`books:`, book);
+      return book[0].count;
+    },
+    authorCount: async () => {
+      const { rows: author } = await db.query("SELECT COUNT(*) FROM author");
+      console.log(`author:`, author);
+      return author[0].count;
+    },
+    allBooks: async (root, args) => {
+      const { rows: books } = await db.query(`
+        SELECT
+          b.id AS id,
+          b.title AS title,
+          b.published AS published,
+          a.name AS author,
+          ARRAY_AGG(g.name) AS genres
+        FROM
+          book b,
+          genre g,
+          author a
+        WHERE
+          b.author_id = a.id
+          AND b.id = g.book_id
+        GROUP BY
+          b.id,
+          a.id
+        ORDER BY id;
+      `);
+      console.log(`books: `, books);
 
+      const { author, genre } = args;
       if (author && genre) {
         return books.filter(
           (book) => book.author === author && book.genres.includes(genre)
@@ -145,41 +117,148 @@ const resolvers = {
       }
       return books;
     },
-    allAuthors: () => authors,
+    allAuthors: async () => {
+      const { rows: authors } = await db.query(
+        "SELECT * FROM author ORDER BY id"
+      );
+      console.log(`authors: `, authors);
+      return authors;
+    },
   },
 
   Author: {
-    bookCount: (root) => {
-      return books.reduce(
-        (total, book) => (book.author === root.name ? total + 1 : total),
-        0
+    bookCount: async (root) => {
+      console.log(`root`, root);
+      const { rows: book } = await db.query(
+        `
+        SELECT
+          COUNT(*) AS book_count
+        FROM
+            BOOK
+        WHERE
+          author_id = $1`,
+        [root.id]
       );
+
+      console.log(`book`, book);
+      return book[0].book_count;
     },
   },
 
   Mutation: {
-    addBook: (root, args) => {
-      const book = { ...args, id: uuid() };
-      books = [...books, book];
-
-      if (!authors.find((author) => author.name === book.author)) {
-        authors = [...authors, { name: book.author, id: uuid() }];
+    addBook: async (root, args, context) => {
+      const { currentUser } = context;
+      console.log(`currentUser`, currentUser);
+      if (!currentUser) {
+        throw new AuthenticationError("not authenticated");
       }
 
-      return book;
-    },
-    editAuthor: (root, args) => {
-      const found = authors.find((author) => author.name === args.name);
-      if (!found) {
-        return null;
-      }
-
-      const updatedAuthor = { ...found, born: args.setBornTo };
-      authors = authors.map((author) =>
-        author.name !== args.name ? author : updatedAuthor
+      // get the author if already exists
+      // else insert it into author table
+      const { rows: author } = await db.query(
+        `
+        WITH insert_author AS (
+          INSERT INTO author (name)
+            VALUES ($1)
+          ON CONFLICT(name) DO NOTHING
+          RETURNING id
+        )
+        SELECT * FROM insert_author
+          UNION
+        SELECT id FROM author WHERE name=$1;`,
+        [args.author]
       );
+      const authorId = author[0].id;
+      console.log(`authorId: `, authorId);
 
-      return updatedAuthor;
+      // insert the book if not exists
+      // else throw an error
+      let bookId;
+      try {
+        const { rows: book } = await db.query(
+          `
+          INSERT INTO
+            book (title, published, author_id)
+            VALUES ($1, $2, $3)
+            RETURNING id`,
+          [args.title, args.published, authorId]
+        );
+        bookId = book[0].id;
+        console.log(`bookId: `, bookId);
+      } catch (error) {
+        throw new UserInputError(error.message, {
+          invalidArgs: args,
+        });
+      }
+
+      // generate the query to insert genres
+      // for the new book into genre table
+      let query = "INSERT INTO genre (book_id, name) VALUES";
+      args.genres.forEach((name) => {
+        query += `(${bookId}, '${name}'),`;
+      });
+      query = query.slice(0, -1);
+      query += ";";
+      console.log(`query`, query);
+
+      // execute the query
+      try {
+        await db.query(query);
+      } catch (error) {
+        throw new UserInputError(error.message, {
+          invalidArgs: args,
+        });
+      }
+
+      return { ...args, id: bookId };
+    },
+    editAuthor: async (root, args, context) => {
+      const { currentUser } = context;
+      console.log(`currentUser`, currentUser);
+      if (!currentUser) {
+        throw new AuthenticationError("not authenticated");
+      }
+
+      const { rows: updatedAuthors } = await db.query(
+        `
+        UPDATE author
+          SET born = $1 
+          WHERE name = $2
+          RETURNING *
+      `,
+        [args.setBornTo, args.name]
+      );
+      console.log(`updatedAuthor: `, updatedAuthors[0]);
+      return updatedAuthors[0];
+    },
+    createUser: async (root, args) => {
+      try {
+        const { rows: users } = await db.query(
+          "INSERT INTO myuser (username) VALUES($1) RETURNING *",
+          [args.username]
+        );
+        return users[0];
+      } catch (error) {
+        throw new UserInputError(error.message, {
+          invalidArgs: args,
+        });
+      }
+    },
+    login: async (root, args) => {
+      const { rows: users } = await db.query(
+        "SELECT * FROM myuser WHERE username=$1",
+        [args.username]
+      );
+      if (!users[0] || args.password !== "secret") {
+        throw new UserInputError("wrong credentials");
+      }
+
+      const userForToken = {
+        username: users[0].username,
+        id: users[0].id,
+      };
+
+      return { value: jwt.sign(userForToken, JWT_SECRET) };
     },
   },
 };
@@ -190,6 +269,20 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
+  context: async ({ req }) => {
+    const auth = req ? req.headers.authorization : null;
+
+    if (auth && auth.toLowerCase().startsWith("bearer ")) {
+      const decodedToken = jwt.verify(auth.substring(7), JWT_SECRET);
+
+      const { rows: users } = await db.query(
+        "SELECT * FROM myuser WHERE id=$1",
+        [decodedToken.id]
+      );
+
+      return { currentUser: users[0] };
+    }
+  },
 });
 
 // The `listen` method launches a web server.
