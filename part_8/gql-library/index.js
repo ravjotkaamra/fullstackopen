@@ -49,6 +49,7 @@ const typeDefs = gql`
     authorCount: Int!
     allBooks(author: String, genre: String): [Book!]!
     allAuthors: [Author!]!
+    allGenres: [String!]!
   }
 
   type Mutation {
@@ -72,12 +73,12 @@ const resolvers = {
       return context.currentUser;
     },
     bookCount: async () => {
-      const { rows: book } = await db.query("SELECT COUNT(*) FROM book");
+      const { rows: book } = await db.query("SELECT COUNT(*) FROM book;");
       console.log(`books:`, book);
       return book[0].count;
     },
     authorCount: async () => {
-      const { rows: author } = await db.query("SELECT COUNT(*) FROM author");
+      const { rows: author } = await db.query("SELECT COUNT(*) FROM author;");
       console.log(`author:`, author);
       return author[0].count;
     },
@@ -119,10 +120,17 @@ const resolvers = {
     },
     allAuthors: async () => {
       const { rows: authors } = await db.query(
-        "SELECT * FROM author ORDER BY id"
+        "SELECT * FROM author ORDER BY id;"
       );
       console.log(`authors: `, authors);
       return authors;
+    },
+    allGenres: async () => {
+      const { rows: genres } = await db.query(
+        "SELECT DISTINCT name FROM genre;"
+      );
+      console.log(`genres: `, genres);
+      return genres.map((g) => g.name);
     },
   },
 
@@ -280,7 +288,9 @@ const server = new ApolloServer({
         [decodedToken.id]
       );
 
-      return { currentUser: users[0] };
+      return {
+        currentUser: { ...users[0], favoriteGenre: users[0].favorite_genre },
+      };
     }
   },
 });
