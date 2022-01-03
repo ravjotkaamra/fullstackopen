@@ -7,10 +7,17 @@ const EditBirthYear = ({ authors }) => {
   const [birth, setBirth] = useState("");
 
   const [editBirthYearAuthor] = useMutation(EDIT_AUTHOR, {
-    refetchQueries: [ALL_AUTHORS],
+    update: (store, response) => {
+      const { name, born } = response.data.editAuthor;
+      store.updateQuery({ query: ALL_AUTHORS }, (data) => ({
+        allAuthors: data.allAuthors.map((a) =>
+          a.name === name ? { ...a, born } : a
+        ),
+      }));
+    },
   });
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
 
     editBirthYearAuthor({ variables: { name, birth: parseInt(birth) } });
