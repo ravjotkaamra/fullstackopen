@@ -22,7 +22,7 @@ const parseExerciseArguments = (args: Array<string>): ExerciseValues => {
   }
 
   const dailyHours: Array<number> = [];
-  const target: number = Number(args[2]);
+  const target = Number(args[2]);
 
   for (let i = 3; i < args.length; i++) {
     if (isNaN(Number(args[i]))) {
@@ -39,11 +39,16 @@ const calculateExercises = (
   targetHours: number,
   dailyExerciseHours: Array<number>
 ): TrainingResult => {
+  const periodLength = dailyExerciseHours.length;
+
   const average =
-    dailyExerciseHours.reduce((prev, curr) => prev + curr, 0) /
-    dailyExerciseHours.length;
+    periodLength === 0
+      ? 0
+      : dailyExerciseHours.reduce((prev, curr) => prev + curr, 0) /
+        dailyExerciseHours.length;
+
   return {
-    periodLength: dailyExerciseHours.length,
+    periodLength,
     trainingDays: dailyExerciseHours.filter((hours) => hours > 0).length,
     success: average > targetHours,
     rating: 2,
@@ -63,3 +68,5 @@ try {
   }
   console.log(errorMessage);
 }
+
+export default calculateExercises;
