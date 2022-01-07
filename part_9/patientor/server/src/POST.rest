@@ -1,0 +1,10 @@
+POST http://localhost:3003/api/patients HTTP/1.1
+content-type: application/json
+
+{
+    "name": "Ravjot Singj",
+    "dateOfBirth": "2012-02-30",
+    "ssn": "300099-77R",
+    "gender": "male",
+    "occupation": "Student"
+}
