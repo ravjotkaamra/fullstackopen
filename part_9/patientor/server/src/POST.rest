@@ -1,10 +1,14 @@
-POST http://localhost:3003/api/patients HTTP/1.1
+POST http://localhost:3003/api/patients/d27736ec-f723-11e9-8f0b-362b9e155667/entries HTTP/1.1
 content-type: application/json
 
 {
-    "name": "Ravjot Singj",
-    "dateOfBirth": "2012-02-30",
-    "ssn": "300099-77R",
-    "gender": "male",
-    "occupation": "Student"
+    "description": "Ravjot Singh",
+    "date": "2012-02-30",
+    "specialist": "300099-77R",
+    "discharge": {
+        "date": "2013-02-18",
+        "criteria": "hola"
+    },
+    "occupation": "Student",
+    "type" : "HealthCheck"
 }
