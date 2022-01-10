@@ -17,14 +17,20 @@ const App = () => {
 
     const fetchPatientAndDiagnosisList = async () => {
       try {
-        const { data: patientListFromApi } = await axios.get<Patient[]>(
-          `${apiBaseUrl}/patients`
-        );
-        dispatch(setPatientList(patientListFromApi));
-
-        const { data: diagnosisListFromApi } = await axios.get<Diagnosis[]>(
+        // get the promise objects
+        const patientsRequest = axios.get<Patient[]>(`${apiBaseUrl}/patients`);
+        const diagnosesRequest = axios.get<Diagnosis[]>(
           `${apiBaseUrl}/diagnoses`
         );
+
+        // wait for the promises to resolve
+        const [{ data: patientListFromApi }, { data: diagnosisListFromApi }] =
+          await Promise.all([patientsRequest, diagnosesRequest]);
+
+        console.log("patientListFromApi :>> ", patientListFromApi);
+        console.log(`diagnosisListFromApi`, diagnosisListFromApi);
+        // update the react state
+        dispatch(setPatientList(patientListFromApi));
         dispatch(setDiagnosisList(diagnosisListFromApi));
       } catch (e) {
         console.error(e);

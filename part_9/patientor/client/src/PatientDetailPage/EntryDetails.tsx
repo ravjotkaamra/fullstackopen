@@ -24,20 +24,3 @@ const EntryDetails: React.FC<{ entry: Entry }> = ({ entry }) => {
 };
 
 export default EntryDetails;
-
-{
-  /* <List.Item key={e.id}>
-          <p>
-            <strong>{e.date}</strong> <em>{e.description}</em>
-          </p>
-
-          <List.List as="ul">
-            {e.diagnosisCodes &&
-              e.diagnosisCodes.map((code) => (
-                <List.Item as="li" key={code}>
-                  {code} {diagnoses && diagnoses[code].name}
-                </List.Item>
-              ))}
-          </List.List>
-        </List.Item> */
-}

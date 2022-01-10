@@ -39,10 +39,10 @@ const PatientDetailPage = () => {
       console.log(`fetching patient info with id: ${id}`);
       void fetchPatientById();
     }
-  }, [dispatch]);
+  }, [patient]);
 
   if (!patient) {
-    return null;
+    return <div>Error: Patient does not exist</div>;
   }
 
   const showIcon = (): JSX.Element => {

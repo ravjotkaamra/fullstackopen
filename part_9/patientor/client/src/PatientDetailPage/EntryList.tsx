@@ -4,7 +4,7 @@ import { Entry } from "../types";
 import EntryDetails from "./EntryDetails";
 
 const EntryList = ({ entries }: { entries: Entry[] | undefined }) => {
-  if (!entries) {
+  if (!entries || !entries.length) {
     return <div>no entries available</div>;
   }
   return (
